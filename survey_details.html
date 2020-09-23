@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <title>Survey on life during the coronavirus pandemic</title>
+    </head>
+    <body>
+        <div style="font-family:sans-serif;margin-left:10%;margin-right:10%;">
+            <p style="font-weight:bold;margin-left:15%;margin-right:15%;font-size:2em;">Survey on life during the coronavirus pandemic</p>
+            <p style="margin-left:15%;margin-right:15%;">We are running an academic research project the effects of Covid-19 on everyday life. For that, we invite you to answer a 10-12 minute academic research survey about how the pandemic affects you and how you are doing at the moment</p>
+            <!-- THIS IS THE HTML FORM NEEDED TO BE ABLE TO SUBMIT THE HIT -->
+            <form name='mturk_form' method='post' id='mturk_form' onsubmit = 'return validate()' action='https://www.mturk.com/mturk/externalSubmit'>
+              
+              <!-- THIS IS WHERE THE LINK WILL APPEAR -->
+              <span id='link' style='text-align: center;'>Link will appear here once HIT is accepted. If it does not, make sure javascript is enabled in your browser.</span>
+            
+              <p style='text-align:center;'><span style="font-weight:bold;">After completing the survey, </span> <br /> enter the completion code from last page here:<br /><input type='text' id='complete' name='complete' /></p>
+              <p style='text-align:center;'><input type='submit' id='submitButton'/></p>
+            </form>
+            <script type="text/javascript">
+            function validate(){
+               
+               var x = document.forms["mturk_form"]["complete"].value;
+               /* VALIDATION CRITERION FOR THE SURVEY CODE */
+               if (x >= 100000 && x <= 999999) {
+                return true;
+              } else {
+                if(confirm("This survey code appears invalid. Click cancel and check the code you entered; otherwise your HIT is likely to be rejected.")) {
+                    return true;
+                }
+              }
+              return false;
+              }
+            </script>
+
+            <script type="text/javascript">
+              /* RETRIEVE URL */
+              var fullurl=new String();
+              /* THIS IS THE LINE TO CAPTURE THE ACTUAL URL: */
+              var fullurl=window.location.href;
+  
+              /* FUNCTION TO EXTRACT A URL PARAMETER (FROM: https://s3.amazonaws.com/mturk-public/externalHIT_v1.js) */
+              function turkGetParam( name ) { 
+                  var regexS = "[\?&]"+name+"=([^&#]*)"; 
+                  var regex = new RegExp( regexS ); 
+                  var tmpURL = fullurl; 
+                  var results = regex.exec( tmpURL ); 
+                  if( results == null ) { 
+                    return ""; 
+                  } else { 
+                    return results[1];    
+                  } 
+              }
+              
+              /* ASSIGNS THE URL PARAMETERS TO JAVASCRIPT VARIABLES */
+              var assign = turkGetParam('assignmentId');
+              var hit = turkGetParam('hitId');
+              var worker = turkGetParam('workerId');
+              
+              /* THIS PART BUILDS THE LINK FOR AN ACCEPTED ASSIGNMENT */
+              if(assign=="ASSIGNMENT_ID_NOT_AVAILABLE") {
+                  /* THIS IS A MESSAGE ABOUT THE HIT BEING IN PREVIEW MODE (SO IT WON'T SHOW THE LINK) */
+                  document.getElementById('link').innerHTML = "<p style='font-weight:bold;text-align:center;'>Link will become available once you accept the HIT. (This is to help you avoid duplicate submissions.)</p>";
+              } else {
+                  /* CONSTRUCT THE SURVEY LINK WITH THE EMBEDDED VALUES: */
+                  var surveylink = new String("https://goldpsych.eu.qualtrics.com/jfe/form/SV_5pdxFrbtFfL6YPb"
+                                   + "?assignmentId=" + assign
+                                   + "&hitId=" + hit
+                                   + "&workerId=" + worker
+                                   );
+                  /* DISPLAY THE LINK */
+                  document.getElementById('link').innerHTML = "<p><a href='" + surveylink + "' target='_blank'>Complete this survey</a></p>";
+              }
+            </script>
+        </div>
+    </body>
+</html>

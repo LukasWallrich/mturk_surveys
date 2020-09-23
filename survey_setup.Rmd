@@ -1,0 +1,129 @@
+---
+title: "Set up MTurk survey"
+output: html_notebook
+---
+
+# Connect to MTurk API
+
+```{r}
+devtools::install_github("cloudyr/pyMTurkR#18") #Qualification requirement for HITTypes do not work in CRAN version 1.1.4 - fixed in this PR
+
+library(pyMTurkR)
+source("parameters.R") #Includes setting of access keys
+options(pyMTurkR.sandbox = F)
+
+#Check connection
+#AccountBalance()
+```
+
+
+# Create qualifications and qualification requirement
+
+## Set parameters
+
+```{r}
+project_name <- "Covid" #used as prefix for qualification
+min_HITs <- 100 #Minimum number of completed HITs required. Suggested: at least 100
+min_approved <- 90 #Minimum share of HITs approved (%). Suggested: at least 90
+locations <- list(Country = "US")
+
+blacklist <- "3Z51ZTGR644Q1WDP87483T7ZE95WZY" #QualificationTypeId of blacklist to be used, if any
+
+```
+
+## Create duplication qual and save its ID
+
+Run as is and save compl_qual_id to parameters.R
+
+```{r}
+# create QualificationType to prevent duplicate responses
+compl_qual <- CreateQualificationType(name=paste0(project_name, ": Already completed HIT"),
+                                description="Already completed identical HIT before.",
+                                status = "Active")
+
+compl_qual_id <- compl_qual$QualificationTypeId
+
+```
+
+
+## Set up standard qualification
+
+Run as is.
+
+```{r}
+# Set up standard qualifications
+quals <- list(
+  list( #Number of HITs
+    QualificationTypeId = "00000000000000000040", Comparator = "GreaterThan", IntegerValues = min_HITs, RequiredToPreview = TRUE
+  ), list( #Country
+    QualificationTypeId = "00000000000000000071", Comparator = "EqualTo", LocaleValues = locations, RequiredToPreview = TRUE 
+  ), list( #Percent Approved
+    QualificationTypeId = "000000000000000000L0", Comparator = "GreaterThan", IntegerValues = min_approved, RequiredToPreview = TRUE
+  ))
+
+# Add extra qualification - duplicate marker and individual blacklist
+
+quals <- c(quals, 
+    list(list(  #Extra qualification - not yet participated
+    QualificationTypeId = compl_qual_id, Comparator = "DoesNotExist", RequiredToPreview = TRUE
+  )))
+
+if (!is.null(blacklist)) {
+  quals <- c(quals, list(list(
+  QualificationTypeId = blacklist, Comparator = "DoesNotExist", RequiredToPreview = TRUE
+)))
+}
+
+
+qreq <- GenerateQualificationRequirement(quals)
+
+
+
+```
+
+# Create HITType and question
+
+## Set parameters
+
+```{r}
+
+HIT_attributes <- list(
+  title="Survey on life during the coronavirus pandemic",
+  #Short description shown before workers click on HIT
+  description= "Complete a 10-12-minute academic research survey about your life during the coronavirus pandemic",
+  #Reward per HIT in USD
+  reward="1.25",
+  #Duration = time until timeout, should be much longer than survey
+  duration=seconds(hours=1), 
+  #Time until auto-approval - cannot reject after that anymore
+  auto.approval.delay = seconds(days=4),
+  keywords="survey, questionnaire, research")
+
+question_attributes <- data.frame(
+  # Title and description of HIT - shown after worker clicked on it
+  Title = "Survey on life during the coronavirus pandemic", 
+  Description = "We are running an academic research project the effects of Covid-19 on everyday life. For that, we invite you to answer a 10-12 minute academic research survey about how the pandemic affects you and how you are doing at the moment",
+  # Javascript code to validate survey code entered - "true" to skip
+  Code_validation = "x >= 100000 && x <= 999999",
+  #Survey link - cannot contain URL parameters! (i.e. no ? in link)
+  Link = "https://goldpsych.eu.qualtrics.com/jfe/form/SV_5pdxFrbtFfL6YPb"
+)
+
+
+```
+
+
+## Create HIT and question HTML file
+
+Run as is and save HITType_id to parameters.R
+
+```{r}
+#Register type
+HITType <- do.call(RegisterHITType, HIT_attributes)
+HITType_id <- HITType$HITTypeId
+
+hits <- GenerateHITsFromTemplate(template = "survey_template.html", input = HIT_vars)
+
+writeLines(hits[[1]], "survey_details.html")
+
+```
