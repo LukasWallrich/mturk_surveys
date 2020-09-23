@@ -1,0 +1,50 @@
+---
+title: "Process submissions to MTurk survey"
+output: html_notebook
+---
+
+```{r}
+pacman::p_load(dplyr, magrittr, pyMTurkR)
+```
+
+
+# Retrieve HITs to be approved
+
+```{r}
+
+assignments <- GetAssignments(hit.type = HITType_id, status = "Submitted", get.answers = TRUE) 
+
+assignments <- assignments %>% extract2("Answers") %>% filter(QuestionIdentifier == "complete") %>% select(AssignmentId, SurveyCode = FreeText) %>% right_join(assignments %>% extract2("Assignments"))
+
+```
+
+
+# Approve valid submissions
+
+```{r}
+#Check for duplicate survey codes
+duplicates <- assignments$SurveyCode[duplicated(assignments$SurveyCode)]
+duplicates
+
+#Approve codes that appear in Qualtrics data
+survey_codes <- read.csv("Qualtrics_codes.csv")
+
+approve_codes <- assignments %>% filter(AssignmentStatus == "Submitted") %>% pull(SurveyCode) %>% intersect(survey_codes) %>% setdiff(duplicates)
+
+ApproveAssignments(assignments$AssignmentId[assignments$SurveyCode %in% approve_codes], feedback = "Thank you for participating in our survey!")
+
+# Deal with duplicates and other issues manually
+
+# For rejection
+RejectAssignments(assignments$AssignmentId[assignments$SurveyCode %in% reject_codes], feedback = "Rejected due to ...")
+
+```
+
+
+
+
+
+
+
+
+

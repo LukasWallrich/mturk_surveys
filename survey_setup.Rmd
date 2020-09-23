@@ -119,11 +119,29 @@ Run as is and save HITType_id to parameters.R
 
 ```{r}
 #Register type
+HIT_attributes <- c(HIT_attributes, qual.req = list(quals))
 HITType <- do.call(RegisterHITType, HIT_attributes)
 HITType_id <- HITType$HITTypeId
 
-hits <- GenerateHITsFromTemplate(template = "survey_template.html", input = HIT_vars)
+hits <- GenerateHITsFromTemplate(template = "survey_template.html", input = question_attributes)
 
 writeLines(hits[[1]], "survey_details.html")
 
 ```
+
+# Optional: receive email when new HIT is reviewable
+
+Particularly helpful when survey_run.R is run on a VM or in some other place where it is not easily monitored.
+
+```{r}
+a <- GenerateNotification("lukas.wallrich@gmail.com", "Email", "HITReviewable")
+
+SetHITTypeNotification(hit.type = HITType_id,
+notification = a,
+active = TRUE)
+
+# send test notification
+SendTestEventNotification(a, test.event.type = "HITReviewable")
+
+```
+
