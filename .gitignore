@@ -3,4 +3,7 @@
 .RData
 .Ruserdata
 .Rproj
-.nb.html
+*.nb.html
+mturk_surveys.Rproj
+keys.R
+survey_details.html
