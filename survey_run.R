@@ -2,14 +2,14 @@
 library(pyMTurkR)
 library(magrittr)
 source("parameters.R") #Includes setting of access keys
-options(pyMTurkR.sandbox = T)
+options(pyMTurkR.sandbox = F)
 
-x<-AccountBalance()
+AccountBalance()
 
 
 # variable to index number of completed assignments
 completed <- 0
-total <- 8
+total <- 45
 
 # list to store assignments into
 allassigns <- list()
@@ -55,7 +55,7 @@ repeat {
     # check if enough assignments have been completed
     if(completed < total) {    
       # if not, create another HIT
-      current_HIT <- CreateHIT(hit.type = QhitType,
+      current_HIT <- CreateHIT(hit.type = HITType_id,
                        assignments = min(assignmentsPerBatch, total-completed),
                        expiration = seconds(days = 4),
                        question = HTML_question)
